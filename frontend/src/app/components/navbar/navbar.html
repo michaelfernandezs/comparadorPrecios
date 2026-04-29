@@ -1,0 +1,21 @@
+<nav class="bg-slate-900 border-b border-slate-700 px-6 py-4">
+  <div class="max-w-4xl mx-auto flex items-center justify-between">
+
+    <span class="text-white font-black text-xl">PriceHunter</span>
+
+    <div class="flex gap-2">
+      <a routerLink="/"
+         routerLinkActive="bg-slate-700 text-white"
+         [routerLinkActiveOptions]="{ exact: true }"
+         class="px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all text-sm font-medium">
+        Comparar
+      </a>
+      <a routerLink="/history"
+         routerLinkActive="bg-slate-700 text-white"
+         class="px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all text-sm font-medium">
+        Historial
+      </a>
+    </div>
+
+  </div>
+</nav>

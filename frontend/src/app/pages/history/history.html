@@ -1,0 +1,91 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+
+  <div class="max-w-4xl mx-auto px-4 py-12">
+
+    <!-- Header -->
+    <div class="mb-10">
+      <h1 class="text-4xl font-black text-white mb-2">Historial</h1>
+      <p class="text-slate-400">Últimas comparaciones realizadas</p>
+    </div>
+
+    <!-- Loading -->
+    @if (loading()) {
+      <div class="flex justify-center py-20">
+        <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+    }
+
+    <!-- Sin resultados -->
+    @if (!loading() && searches().length === 0) {
+      <div class="text-center py-20 text-slate-400">
+        <p class="text-lg font-medium">No hay comparaciones aún</p>
+        <p class="text-sm mt-1">Haz una comparación para ver el historial</p>
+      </div>
+    }
+
+    <!-- Lista de comparaciones -->
+    @if (!loading() && searches().length > 0) {
+      <div class="flex flex-col gap-6">
+        @for (comparison of searches(); track comparison.id) {
+          <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+
+            <!-- Header de la comparación -->
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <p class="text-xs text-slate-400 mb-1">{{ comparison.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+                <p class="text-white font-bold">
+                  Ganador: 
+                  <span class="text-green-400">{{ comparison.winner }} — {{ comparison.winnerPrice }}</span>
+                </p>
+              </div>
+              <span class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full">
+                {{ comparison.results.length }} tiendas
+              </span>
+            </div>
+
+            <!-- Resultados de la comparación -->
+            <div class="flex flex-col gap-3">
+              @for (result of comparison.results; track result.id) {
+                <div class="flex items-center gap-4 bg-slate-700 rounded-xl p-3"
+                     [class.border]="result.store === comparison.winner"
+                     [class.border-green-500]="result.store === comparison.winner">
+
+                  <!-- Imagen -->
+                  <div class="w-12 h-12 bg-white rounded-lg flex-shrink-0 overflow-hidden">
+                    <img [src]="result.image" [alt]="result.title"
+                         class="w-full h-full object-contain p-1" />
+                  </div>
+
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-blue-400 uppercase tracking-wide">{{ result.store }}</p>
+                    <p class="text-white text-sm truncate">{{ result.title }}</p>
+                  </div>
+
+                  <!-- Precio -->
+                  <div class="text-right flex-shrink-0">
+                    <p class="font-bold"
+                       [class.text-green-400]="result.store === comparison.winner"
+                       [class.text-white]="result.store !== comparison.winner">
+                      {{ result.price }}
+                    </p>
+                    <a [href]="result.url" target="_blank"
+                       class="text-blue-400 text-xs hover:text-blue-300">
+                      Ver
+                    </a>
+                  </div>
+
+                </div>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+</div>
