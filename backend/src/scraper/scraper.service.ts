@@ -23,23 +23,27 @@ export class ScraperService {
 
   async scrapeUrl(url: string) {
    
-   const browser = await puppeteer.launch({
-  headless: true, 
+const browser = await puppeteer.launch({
+  headless: true,
   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
   args: [
     '--no-sandbox',
     '--disable-setuid-sandbox',
     '--disable-blink-features=AutomationControlled',
     '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--window-size=1920,1080',
+    '--disable-features=IsolateOrigins,site-per-process',
   ],
 });
 
-    const page = await browser.newPage();
+const page = await browser.newPage();
 
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
+await page.setViewport({ width: 1920, height: 1080 });
 
+await page.setUserAgent(
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+);
     await page.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, 'webdriver', { get: () => false });
     });
@@ -47,7 +51,6 @@ export class ScraperService {
     await page.setDefaultNavigationTimeout(70000);
     await page.goto(url, { waitUntil: 'networkidle2' });
 
-    await page.waitForSelector('.ui-pdp-title', { timeout: 15000 }).catch(() => {});
 
     const data = await page.evaluate(() => {
       const hostname = window.location.hostname;
@@ -60,7 +63,7 @@ export class ScraperService {
 
       if (hostname.includes('mercadolibre')) {
         store       = 'Mercado Libre';
-        title       = document.querySelector('.ui-pdp-title')?.textContent || title;
+        title       = document.querySelector('.ui-pdp-title')?.textContent  || title;
         price       = document.querySelector('.ui-pdp-price__second-line .ui-pdp-price__part')?.textContent || price;
         description = document.querySelector('.ui-pdp-description__content')?.textContent || description;
         image       = (document.querySelector('.ui-pdp-gallery__figure img') as HTMLImageElement)?.src || image;
@@ -178,38 +181,6 @@ export class ScraperService {
 }
 
 
-async saveComparison(results: any[]) {
-  for (const result of results) {
-    // Busca si ya existe un TrackedProduct para esta URL
-    let tracked = await this.trackedProductRepository.findOne({
-      where: { url: result.url }
-    });
+a
 
-    // Si no existe, créalo
-    if (!tracked) {
-      tracked = this.trackedProductRepository.create({
-        store: result.store,
-        title: result.title,
-        url: result.url,
-        image: result.image,
-        currentPrice: result.price,
-      });
-      await this.trackedProductRepository.save(tracked);
-    } else {
-      // Actualiza el precio actual
-      tracked.currentPrice = result.price;
-      await this.trackedProductRepository.save(tracked);
-    }
-
-    // Guarda el precio en el historial
-    const priceEntry = this.priceHistoryRepository.create({
-      price: result.price,
-      trackedProduct: tracked,
-    });
-    await this.priceHistoryRepository.save(priceEntry);
-
-    // Linkea el SearchResult con el TrackedProduct
-    result.trackedProductId = tracked.id;
-  }
-}
 }
