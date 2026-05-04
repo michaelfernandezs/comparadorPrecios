@@ -14,8 +14,15 @@ export class ScraperController {
   }
 
   
-  @Get('history/:id')
-getHistory(@Param('id') id: number) {
+
+
+@Get('history')
+getAllHistory() {
+  return this.scraperService.getHistory();
+}
+
+@Get('history/:id')
+getProductHistory(@Param('id') id: number) {
   return this.scraperService.getProductHistory(id);
 }
 }

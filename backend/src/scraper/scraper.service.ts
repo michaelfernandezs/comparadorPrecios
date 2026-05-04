@@ -22,14 +22,17 @@ export class ScraperService {
   ) {}
 
   async scrapeUrl(url: string) {
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled',
-      ],
-    });
+   
+   const browser = await puppeteer.launch({
+  headless: true, 
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-blink-features=AutomationControlled',
+    '--disable-dev-shm-usage',
+  ],
+});
 
     const page = await browser.newPage();
 
@@ -87,41 +90,68 @@ export class ScraperService {
   }
 
   async compareAll(urls: string[]) {
-    const results = await Promise.all(
-      urls.map(url => this.scrapeUrl(url))
-    );
+  const results = await Promise.all(
+    urls.map(url => this.scrapeUrl(url))
+  );
 
-    // Encontrar el ganador (precio más bajo)
-    const withPrices = results.map(r => ({
-      ...r,
-      priceNumber: parseFloat(r.price.replace(/[^0-9.]/g, '')) || 0,
-    }));
+  const withPrices = results.map(r => ({
+    ...r,
+    priceNumber: parseFloat(r.price.replace(/[^0-9.]/g, '')) || 0,
+  }));
 
-    const sorted = [...withPrices].sort((a, b) => a.priceNumber - b.priceNumber);
-    const winner = sorted[0];
+  const sorted = [...withPrices].sort((a, b) => a.priceNumber - b.priceNumber);
+  const winner = sorted[0];
 
-    // Guardar comparación completa en PostgreSQL
-    const comparison = this.comparisonRepository.create({
-      winner: winner.store,
-      winnerPrice: winner.price,
+  const comparison = this.comparisonRepository.create({
+    winner: winner.store,
+    winnerPrice: winner.price,
+  });
+  const saved = await this.comparisonRepository.save(comparison);
+
+  for (const result of results) {
+  const url = urls[results.indexOf(result)];
+
+  // 1. Primero buscar o crear TrackedProduct
+  let tracked = await this.trackedProductRepository.findOne({
+    where: { url }
+  });
+
+  if (!tracked) {
+    tracked = this.trackedProductRepository.create({
+      store: result.store,
+      title: result.title,
+      url,
+      image: result.image,
+      currentPrice: result.price,
     });
-
-    const saved = await this.comparisonRepository.save(comparison);
-
-    // Guardar cada resultado asociado a la comparación
-    for (const result of results) {
-      await this.searchResultRepository.save({
-        comparison: saved,
-        store: result.store,
-        title: result.title,
-        price: result.price,
-        image: result.image,
-        url: urls[results.indexOf(result)],
-      });
-    }
-
-    return results;
+  } else {
+    tracked.currentPrice = result.price;
   }
+
+  await this.trackedProductRepository.save(tracked);
+
+  // 2. Ahora guardar SearchResult con el trackedProductId
+  await this.searchResultRepository.save({
+    comparison: saved,
+    store: result.store,
+    title: result.title,
+    price: result.price,
+    image: result.image,
+    url,
+    trackedProductId: tracked.id,  // ← ya tenemos el id
+  });
+
+  // 3. Registrar precio en el historial
+  await this.priceHistoryRepository.save(
+    this.priceHistoryRepository.create({
+      price: result.price,
+      trackedProduct: tracked,
+    })
+  );
+}
+
+  return results;
+}
 
   async getHistory() {
     return this.comparisonRepository.find({
@@ -145,5 +175,41 @@ export class ScraperService {
   );
 
   return product;
+}
+
+
+async saveComparison(results: any[]) {
+  for (const result of results) {
+    // Busca si ya existe un TrackedProduct para esta URL
+    let tracked = await this.trackedProductRepository.findOne({
+      where: { url: result.url }
+    });
+
+    // Si no existe, créalo
+    if (!tracked) {
+      tracked = this.trackedProductRepository.create({
+        store: result.store,
+        title: result.title,
+        url: result.url,
+        image: result.image,
+        currentPrice: result.price,
+      });
+      await this.trackedProductRepository.save(tracked);
+    } else {
+      // Actualiza el precio actual
+      tracked.currentPrice = result.price;
+      await this.trackedProductRepository.save(tracked);
+    }
+
+    // Guarda el precio en el historial
+    const priceEntry = this.priceHistoryRepository.create({
+      price: result.price,
+      trackedProduct: tracked,
+    });
+    await this.priceHistoryRepository.save(priceEntry);
+
+    // Linkea el SearchResult con el TrackedProduct
+    result.trackedProductId = tracked.id;
+  }
 }
 }

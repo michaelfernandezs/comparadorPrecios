@@ -19,6 +19,7 @@ import { PriceHistory } from './scraper/price-history.entity';
       database: 'price_comparator',
       entities: [Comparison, SearchResult, TrackedProduct, PriceHistory],
       synchronize: true,
+     
     }),
     ScraperModule,
   ],

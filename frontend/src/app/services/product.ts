@@ -23,5 +23,7 @@ export class ProductService {
   getHistory(): Observable<any> {
     return this.http.get('http://localhost:3000/scrape/history');
   }
-
+getProductHistory(id: number): Observable<any> {
+  return this.http.get(`http://localhost:3000/scrape/history/${id}`);
+}
 }

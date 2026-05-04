@@ -49,9 +49,10 @@
             <!-- Resultados de la comparación -->
             <div class="flex flex-col gap-3">
               @for (result of comparison.results; track result.id) {
-                <div class="flex items-center gap-4 bg-slate-700 rounded-xl p-3"
-                     [class.border]="result.store === comparison.winner"
-                     [class.border-green-500]="result.store === comparison.winner">
+                <div class="flex items-center gap-4 bg-slate-700 rounded-xl p-3 cursor-pointer hover:bg-slate-600 transition-colors"
+     [class.border]="result.store === comparison.winner"
+     [class.border-green-500]="result.store === comparison.winner"
+     (click)="openChart(result)">
 
                   <!-- Imagen -->
                   <div class="w-12 h-12 bg-white rounded-lg flex-shrink-0 overflow-hidden">
@@ -72,10 +73,11 @@
                        [class.text-white]="result.store !== comparison.winner">
                       {{ result.price }}
                     </p>
-                    <a [href]="result.url" target="_blank"
-                       class="text-blue-400 text-xs hover:text-blue-300">
-                      Ver
-                    </a>
+                   <a [href]="result.url" target="_blank"
+   class="text-blue-400 text-xs hover:text-blue-300"
+   (click)="$event.stopPropagation()">
+  Ver
+</a>
                   </div>
 
                 </div>
@@ -88,4 +90,37 @@
     }
 
   </div>
+
+  <!-- Modal gráfica -->
+@if (modalOpen()) {
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+       (click)="closeModal()">
+    <div class="bg-slate-800 rounded-2xl p-6 w-full max-w-2xl border border-slate-700"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header modal -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <p class="text-white font-bold">{{ selectedProduct()?.title }}</p>
+          <p class="text-slate-400 text-sm">{{ selectedProduct()?.store }}</p>
+        </div>
+        <button (click)="closeModal()"
+                class="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+      </div>
+
+      <!-- Chart -->
+      @if (loadingChart()) {
+        <div class="flex justify-center py-10">
+          <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
+      } @else {
+        <canvas id="priceChart" height="120"></canvas>
+      }
+
+    </div>
+  </div>
+}
 </div>
