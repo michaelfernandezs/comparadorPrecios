@@ -1,115 +1,66 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-
-  <!-- Header -->
-  <div class="text-center py-12 px-4">
-    <h1 class="text-5xl font-black text-white mb-3">PriceHunter</h1>
-    <p class="text-slate-400 text-lg">Encuentra el mejor precio en segundos</p>
+<div class="ph-main">
+  <div class="ph-main-header">
+    <span class="ph-main-title">Comparar precios</span>
   </div>
 
-  <div class="max-w-4xl mx-auto px-4 pb-16">
-
-    <!-- Formulario -->
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 mb-8 shadow-2xl">
-      <h2 class="text-white font-bold text-lg mb-6">Pega los links del producto</h2>
-
-      <div class="flex flex-col gap-4">
-        @for (url of urls; track $index) {
-          <div class="flex items-center gap-3">
-            <span class="text-xs font-bold text-slate-400 w-24 flex-shrink-0">
-              {{ getLabel($index) }}
-            </span>
-            <input
-              type="url"
-              [(ngModel)]="urls[$index]"
-              [placeholder]="getPlaceholder($index)"
-              class="flex-1 bg-slate-700 border border-slate-600 text-white placeholder-slate-400
-                     rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                     focus:border-transparent transition-all"
-            />
-          </div>
+  <!-- Formulario -->
+  <div class="ph-form">
+    @for (url of urls; track $index) {
+      <div class="ph-field">
+        <div class="ph-store-tag">{{ getLabel($index) }}</div>
+        <input class="ph-input" type="url"
+          [(ngModel)]="urls[$index]"
+          [placeholder]="getPlaceholder($index)" />
+      </div>
+    }
+    <div class="ph-actions">
+      <button class="ph-btn" (click)="compare()"
+        [disabled]="loading() || !canCompare()">
+        @if (loading()) {
+          <span style="display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+              <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            Buscando...
+          </span>
+        } @else {
+          Comparar
         }
-      </div>
-
-      <div class="flex gap-3 mt-6">
-        <button (click)="compare()"
-          [disabled]="loading() || !canCompare()"
-          class="flex-1 py-3.5 rounded-xl font-bold text-sm transition-all
-                 bg-blue-600 hover:bg-blue-500 text-white
-                 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed">
-          @if (loading()) {
-            <span class="flex items-center justify-center gap-2">
-              <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-              </svg>
-              Buscando precios...
-            </span>
-          } @else {
-            Comparar precios
-          }
-        </button>
-        <button (click)="clearAll()"
-          class="px-5 py-3.5 rounded-xl border border-slate-600 text-slate-400
-                 hover:bg-slate-700 hover:text-white transition-all text-sm font-medium">
-          Limpiar
-        </button>
-      </div>
+      </button>
+      <button class="ph-btn-ghost" (click)="clearAll()">Limpiar</button>
     </div>
-
-    <!-- Error -->
-    @if (error()) {
-      <div class="bg-red-900/50 border border-red-500/50 text-red-300 rounded-xl p-4 mb-6 text-sm">
-        {{ error() }}
-      </div>
-    }
-
-    <!-- Resultados -->
-    @if (results().length > 0) {
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        @for (product of results(); track $index) {
-          <div class="rounded-2xl border p-5 transition-all"
-               [class.bg-green-900]="$index === 0"
-               [class.border-green-500]="$index === 0"
-               [class.bg-slate-800]="$index !== 0"
-               [class.border-slate-700]="$index !== 0">
-
-            <!-- Badge -->
-            <div class="mb-4">
-              <span class="text-xs font-bold px-3 py-1 rounded-full"
-                    [class.bg-green-500]="$index === 0"
-                    [class.text-white]="$index === 0"
-                    [class.bg-slate-700]="$index !== 0"
-                    [class.text-slate-300]="$index !== 0">
-                @if ($index === 0) { Mejor precio } @else { Opcion {{ $index + 1 }} }
-              </span>
-            </div>
-
-            <!-- Imagen -->
-            <div class="w-full h-40 bg-white rounded-xl mb-4 flex items-center justify-center overflow-hidden">
-              <img [src]="product.image"
-                   [alt]="product.title"
-                   class="h-full w-full object-contain p-2"
-                   (error)="onImgError($event)" />
-            </div>
-
-            <!-- Info -->
-            <h3 class="text-white font-semibold text-sm leading-tight mb-3">
-              {{ product.title }}
-            </h3>
-
-            <p class="text-2xl font-black mb-2"
-               [class.text-green-400]="$index === 0"
-               [class.text-white]="$index !== 0">
-              {{ product.price }}
-            </p>
-
-            <p class="text-slate-400 text-xs leading-relaxed">
-              {{ product.description.slice(0, 80) }}...
-            </p>
-          </div>
-        }
-      </div>
-    }
-
   </div>
+
+  @if (error()) {
+    <div class="ph-error">{{ error() }}</div>
+  }
+
+  <!-- Resultados -->
+  @if (results().length > 0) {
+    <div class="ph-main-header" style="margin-top:1.5rem">
+      <span class="ph-main-title">Resultados</span>
+      <span class="ph-main-sub">{{ results().length }} tiendas · ordenado por precio</span>
+    </div>
+    <div class="ph-results">
+      @for (product of results(); track $index) {
+        <div class="ph-row" [class.ph-row-winner]="$index === 0">
+          <span class="ph-rank" [class.ph-rank-winner]="$index === 0">0{{ $index + 1 }}</span>
+          <span class="ph-row-store" [class.ph-row-store-winner]="$index === 0">{{ product.store }}</span>
+          <span class="ph-row-title" [class.ph-row-title-winner]="$index === 0">{{ product.title }}</span>
+          <span class="ph-row-price" [class.ph-row-price-winner]="$index === 0">{{ product.price }}</span>
+          @if ($index === 0) {
+            <span class="ph-badge">Mejor</span>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  @if (results().length === 0 && !loading()) {
+    <div class="ph-empty">
+      <div class="ph-empty-icon">—</div>
+      <div class="ph-empty-text">Pega los links y presiona comparar</div>
+    </div>
+  }
 </div>

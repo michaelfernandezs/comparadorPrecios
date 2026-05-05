@@ -1,88 +1,67 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+<div class="hi">
 
-  <div class="max-w-4xl mx-auto px-4 py-12">
+  <!-- Sidebar -->
+ 
 
-    <!-- Header -->
-    <div class="mb-10">
-      <h1 class="text-4xl font-black text-white mb-2">Historial</h1>
-      <p class="text-slate-400">Últimas comparaciones realizadas</p>
+  <!-- Main -->
+  <div class="hi-main">
+
+    <div class="hi-main-header">
+      <span class="hi-main-title">Comparaciones</span>
+      @if (!loading()) {
+        <span class="hi-main-sub">{{ searches().length }} registros</span>
+      }
     </div>
 
-    <!-- Loading -->
     @if (loading()) {
-      <div class="flex justify-center py-20">
-        <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      <div class="hi-loading">
+        <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#1a7a4a" stroke-width="4" opacity="0.25"/>
+          <path fill="#1a7a4a" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
         </svg>
+        <span>Cargando...</span>
       </div>
     }
 
-    <!-- Sin resultados -->
     @if (!loading() && searches().length === 0) {
-      <div class="text-center py-20 text-slate-400">
-        <p class="text-lg font-medium">No hay comparaciones aún</p>
-        <p class="text-sm mt-1">Haz una comparación para ver el historial</p>
+      <div class="hi-empty">
+        <div class="hi-empty-icon">—</div>
+        <div class="hi-empty-text">No hay comparaciones aún</div>
       </div>
     }
 
-    <!-- Lista de comparaciones -->
     @if (!loading() && searches().length > 0) {
-      <div class="flex flex-col gap-6">
+      <div class="hi-list">
         @for (comparison of searches(); track comparison.id) {
-          <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+          <div class="hi-group">
 
-            <!-- Header de la comparación -->
-            <div class="flex items-center justify-between mb-5">
-              <div>
-                <p class="text-xs text-slate-400 mb-1">{{ comparison.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
-                <p class="text-white font-bold">
-                  Ganador: 
-                  <span class="text-green-400">{{ comparison.winner }} — {{ comparison.winnerPrice }}</span>
-                </p>
+            <!-- Header grupo -->
+            <div class="hi-group-header">
+              <div class="hi-group-date">{{ comparison.createdAt | date:'dd/MM/yyyy · HH:mm' }}</div>
+              <div class="hi-group-winner">
+                <span class="hi-group-winner-label">Ganador</span>
+                <span class="hi-group-winner-value">{{ comparison.winner }} — {{ comparison.winnerPrice }}</span>
               </div>
-              <span class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full">
-                {{ comparison.results.length }} tiendas
-              </span>
+              <span class="hi-group-count">{{ comparison.results.length }} tiendas</span>
             </div>
 
-            <!-- Resultados de la comparación -->
-            <div class="flex flex-col gap-3">
-              @for (result of comparison.results; track result.id) {
-                <div class="flex items-center gap-4 bg-slate-700 rounded-xl p-3 cursor-pointer hover:bg-slate-600 transition-colors"
-     [class.border]="result.store === comparison.winner"
-     [class.border-green-500]="result.store === comparison.winner"
-     (click)="openChart(result)">
-
-                  <!-- Imagen -->
-                  <div class="w-12 h-12 bg-white rounded-lg flex-shrink-0 overflow-hidden">
-                    <img [src]="result.image" [alt]="result.title"
-                         class="w-full h-full object-contain p-1" />
-                  </div>
-
-                  <!-- Info -->
-                  <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-blue-400 uppercase tracking-wide">{{ result.store }}</p>
-                    <p class="text-white text-sm truncate">{{ result.title }}</p>
-                  </div>
-
-                  <!-- Precio -->
-                  <div class="text-right flex-shrink-0">
-                    <p class="font-bold"
-                       [class.text-green-400]="result.store === comparison.winner"
-                       [class.text-white]="result.store !== comparison.winner">
-                      {{ result.price }}
-                    </p>
-                   <a [href]="result.url" target="_blank"
-   class="text-blue-400 text-xs hover:text-blue-300"
-   (click)="$event.stopPropagation()">
-  Ver
-</a>
-                  </div>
-
-                </div>
-              }
-            </div>
+            <!-- Resultados -->
+            @for (result of comparison.results; track result.id) {
+              <div class="hi-row"
+                   [class.hi-row-winner]="result.store === comparison.winner"
+                   (click)="openChart(result)">
+                <span class="hi-row-store" [class.hi-row-store-winner]="result.store === comparison.winner">
+                  {{ result.store }}
+                </span>
+                <span class="hi-row-title">{{ result.title }}</span>
+                <span class="hi-row-price" [class.hi-row-price-winner]="result.store === comparison.winner">
+                  {{ result.price }}
+                </span>
+                <a [href]="result.url" target="_blank"
+                   class="hi-row-link"
+                   (click)="$event.stopPropagation()">Ver →</a>
+              </div>
+            }
 
           </div>
         }
@@ -91,36 +70,31 @@
 
   </div>
 
-  <!-- Modal gráfica -->
-@if (modalOpen()) {
-  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-       (click)="closeModal()">
-    <div class="bg-slate-800 rounded-2xl p-6 w-full max-w-2xl border border-slate-700"
-         (click)="$event.stopPropagation()">
-
-      <!-- Header modal -->
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <p class="text-white font-bold">{{ selectedProduct()?.title }}</p>
-          <p class="text-slate-400 text-sm">{{ selectedProduct()?.store }}</p>
+  <!-- Modal -->
+  @if (modalOpen()) {
+    <div class="hi-overlay" (click)="closeModal()">
+      <div class="hi-modal" (click)="$event.stopPropagation()">
+        <div class="hi-modal-header">
+          <div>
+            <div class="hi-modal-title">{{ selectedProduct()?.title }}</div>
+            <div class="hi-modal-store">{{ selectedProduct()?.store }}</div>
+          </div>
+          <button class="hi-modal-close" (click)="closeModal()">✕</button>
         </div>
-        <button (click)="closeModal()"
-                class="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+
+        @if (loadingChart()) {
+          <div class="hi-loading">
+            <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="#1a7a4a" stroke-width="4" opacity="0.25"/>
+              <path fill="#1a7a4a" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <span>Cargando gráfica...</span>
+          </div>
+        } @else {
+          <canvas id="priceChart" height="120"></canvas>
+        }
       </div>
-
-      <!-- Chart -->
-      @if (loadingChart()) {
-        <div class="flex justify-center py-10">
-          <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-          </svg>
-        </div>
-      } @else {
-        <canvas id="priceChart" height="120"></canvas>
-      }
-
     </div>
-  </div>
-}
+  }
+
 </div>

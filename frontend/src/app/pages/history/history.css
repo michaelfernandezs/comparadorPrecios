@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.hi {
+  font-family: 'Geist', sans-serif;
+  background: #f7f7f5;
+  min-height: calc(100vh - 48px);
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+
+
+.hi-logo {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #999;
+  letter-spacing: 0.05em;
+}
+.hi-logo span { color: #1a1a1a; }
+
+.hi-section-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #bbb;
+  margin-bottom: 4px;
+}
+
+.hi-meta { font-size: 11px; color: #ccc; }
+
+.hi-back {
+  font-size: 11px;
+  color: #999;
+  text-decoration: none;
+  transition: color 0.15s;
+  margin-top: auto;
+}
+.hi-back:hover { color: #1a1a1a; }
+
+.hi-main { padding: 1.5rem; overflow-y: auto; }
+
+.hi-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.hi-main-title { font-size: 13px; font-weight: 500; color: #1a1a1a; }
+.hi-main-sub { font-family: 'Geist Mono', monospace; font-size: 10px; color: #bbb; }
+
+.hi-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2rem;
+  font-size: 12px;
+  color: #999;
+}
+
+.hi-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  gap: 0.5rem;
+}
+.hi-empty-icon { font-family: 'Geist Mono', monospace; font-size: 24px; color: #e5e5e2; }
+.hi-empty-text { font-size: 12px; color: #ccc; }
+
+.hi-list { display: flex; flex-direction: column; gap: 10px; }
+
+.hi-group {
+  background: #fff;
+  border: 1px solid #e5e5e2;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.hi-group-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid #f0ede8;
+  background: #fafaf8;
+}
+
+.hi-group-date {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: #bbb;
+  flex-shrink: 0;
+}
+
+.hi-group-winner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hi-group-winner-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ccc;
+}
+
+.hi-group-winner-value {
+  font-size: 11px;
+  font-weight: 500;
+  color: #1a7a4a;
+}
+
+.hi-group-count {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+.hi-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid #f7f7f5;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.hi-row:last-child { border-bottom: none; }
+.hi-row:hover { background: #fafaf8; }
+.hi-row-winner { background: #f2fbf6; }
+.hi-row-winner:hover { background: #e8f7ee; }
+
+.hi-row-store {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: #bbb;
+  width: 90px;
+  flex-shrink: 0;
+}
+.hi-row-store-winner { color: #1a7a4a; }
+
+.hi-row-title {
+  flex: 1;
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hi-row-price {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a1a;
+  flex-shrink: 0;
+}
+.hi-row-price-winner { color: #1a7a4a; }
+
+.hi-row-link {
+  font-size: 10px;
+  color: #bbb;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.hi-row-link:hover { color: #1a7a4a; }
+
+/* Modal */
+.hi-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.hi-modal {
+  background: #fff;
+  border: 1px solid #e5e5e2;
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 640px;
+}
+
+.hi-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.hi-modal-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 3px;
+}
+
+.hi-modal-store {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: #1a7a4a;
+}
+
+.hi-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: #bbb;
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 0;
+}
+.hi-modal-close:hover { color: #1a1a1a; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; }
+
+@media (max-width: 640px) {
+  .hi { grid-template-columns: 1fr; }
+  .hi-sidebar { min-height: auto; border-right: none; border-bottom: 1px solid #e5e5e2; }
+  .hi-row-title { display: none; }
+}

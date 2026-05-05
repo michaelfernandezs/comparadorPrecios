@@ -2,13 +2,13 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../services/product';
 import { Chart, registerables } from 'chart.js';
-
+import{RouterLink} from '@angular/router';
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './history.html',
   styleUrl: './history.css'
 })
