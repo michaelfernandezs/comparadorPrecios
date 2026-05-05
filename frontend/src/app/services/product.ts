@@ -18,7 +18,7 @@ export class ProductService {
   constructor(private http: HttpClient) {}
 
   compare(urls: string[]): Observable<ProductResult[]> {
-  return this.http.post<ProductResult[]>('hhttps://empowering-healing-production-a1c8.up.railway.app/scrape', { urls });
+  return this.http.post<ProductResult[]>('https://empowering-healing-production-a1c8.up.railway.app/scrape', { urls });
   }
 
   getHistory(): Observable<any> {
