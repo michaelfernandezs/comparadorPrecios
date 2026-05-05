@@ -4,14 +4,12 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  app.enableCors(
-    {
-    origin: ['https://empowering-healing-production-a1c8.up.railway.app', 'http://localhost:4200'],
-    methods: ['GET', 'POST'],
-  }
-  );
+  app.enableCors({
+    origin: ['https://comparador-precios-beta.vercel.app', 'http://localhost:4200'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+  });
 
-  await app.listen(3000);
-  console.log('Backend corriendo en http://localhost:3000');
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
