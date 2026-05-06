@@ -61,9 +61,19 @@ export class ScraperService {
   const page = await this.newPage(browser);
   try {
     await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
+    
+    const debug = await page.evaluate(() => {
+      return {
+        title: document.title,
+        firstH2: document.querySelector('h2')?.textContent?.slice(0, 100),
+        hasResults: !!document.querySelector('.s-result-item[data-asin]'),
+        url: window.location.href,
+      };
+    });
+    console.log('Amazon debug:', JSON.stringify(debug));
+
     const url = await page.evaluate(() => {
       const link = document.querySelector('.s-result-item[data-asin] h2 a') as HTMLAnchorElement;
-      console.log('Amazon link encontrado:', link?.href);
       return link ? 'https://www.amazon.com.mx' + link.getAttribute('href') : null;
     });
     console.log('Amazon URL:', url);
