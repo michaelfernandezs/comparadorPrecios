@@ -72,10 +72,24 @@ export class ScraperService {
     });
     console.log('Amazon debug:', JSON.stringify(debug));
 
-    const url = await page.evaluate(() => {
-      const link = document.querySelector('.s-result-item[data-asin] h2 a') as HTMLAnchorElement;
-      return link ? 'https://www.amazon.com.mx' + link.getAttribute('href') : null;
-    });
+   const url = await page.evaluate(() => {
+  // Intentar varios selectores de Amazon
+  const selectors = [
+    '.s-result-item[data-asin] h2 a',
+    '.s-search-results .a-link-normal.s-no-outline',
+    '[data-asin] .a-link-normal.s-underline-text',
+    '[data-asin] h2 .a-link-normal',
+  ];
+  
+  for (const selector of selectors) {
+    const link = document.querySelector(selector) as HTMLAnchorElement;
+    if (link && link.href) {
+      console.log('Selector funcionó:', selector, link.href);
+      return link.href;
+    }
+  }
+  return null;
+});
     console.log('Amazon URL:', url);
     return url;
   } finally {
