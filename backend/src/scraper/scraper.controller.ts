@@ -13,8 +13,6 @@ export class ScraperController {
     return results;
   }
 
-  
-
 
 @Get('history')
 getAllHistory() {

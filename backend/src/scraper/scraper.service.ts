@@ -56,21 +56,22 @@ export class ScraperService {
 
   // ─── Búsqueda por nombre en cada tienda ──────────────────────────
 
-  private async searchAmazon(query: string): Promise<string | null> {
-    const browser = await this.launchBrowser();
-    const page = await this.newPage(browser);
-    try {
-      await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-      const url = await page.evaluate(() => {
-        const link = document.querySelector('.s-result-item[data-asin] h2 a') as HTMLAnchorElement;
-        return link ? 'https://www.amazon.com.mx' + link.getAttribute('href') : null;
-      });
-      return url;
-    } finally {
-      await browser.close();
-    }
+ private async searchAmazon(query: string): Promise<string | null> {
+  const browser = await this.launchBrowser();
+  const page = await this.newPage(browser);
+  try {
+    await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
+    const url = await page.evaluate(() => {
+      const link = document.querySelector('.s-result-item[data-asin] h2 a') as HTMLAnchorElement;
+      console.log('Amazon link encontrado:', link?.href);
+      return link ? 'https://www.amazon.com.mx' + link.getAttribute('href') : null;
+    });
+    console.log('Amazon URL:', url);
+    return url;
+  } finally {
+    await browser.close();
   }
-
+}
   private async searchMercadoLibre(query: string): Promise<string | null> {
     const browser = await this.launchBrowser();
     const page = await this.newPage(browser);
@@ -174,18 +175,25 @@ export class ScraperService {
 
   // ─── Comparación y guardado ───────────────────────────────────────
 
-  async compareAll(urls: string[]) {
-    const results = await Promise.all(
-      urls.map(url => this.scrapeUrl(url))
-    );
+ async compareAll(urls: string[]) {
+  const results = await Promise.all(
+    urls.map(url => this.scrapeUrl(url))
+  );
 
-    const withPrices = results.map(r => ({
-      ...r,
-      priceNumber: parseFloat(r.price.replace(/[^0-9.]/g, '')) || 0,
-    }));
+  // Filtrar resultados vacíos
+  const validResults = results.filter(r => r.title !== 'Sin título' && r.price !== 'Sin precio');
 
-    const sorted = [...withPrices].sort((a, b) => a.priceNumber - b.priceNumber);
-    const winner = sorted[0];
+  if (validResults.length === 0) {
+    throw new Error('No se encontraron resultados para ninguna tienda');
+  }
+
+  const withPrices = validResults.map(r => ({
+    ...r,
+    priceNumber: parseFloat(r.price.replace(/[^0-9.]/g, '')) || 0,
+  }));
+
+  const sorted = [...withPrices].sort((a, b) => a.priceNumber - b.priceNumber);
+  const winner = sorted[0];
 
     const comparison = this.comparisonRepository.create({
       winner: winner.store,
