@@ -3,19 +3,17 @@
     <span class="ph-main-title">Comparar precios</span>
   </div>
 
-  <!-- Formulario -->
   <div class="ph-form">
-    @for (url of urls; track $index) {
-      <div class="ph-field">
-        <div class="ph-store-tag">{{ getLabel($index) }}</div>
-        <input class="ph-input" type="url"
-          [(ngModel)]="urls[$index]"
-          [placeholder]="getPlaceholder($index)" />
-      </div>
-    }
+    <div class="ph-field">
+      <div class="ph-store-tag">Producto</div>
+      <input class="ph-input" type="text"
+        [(ngModel)]="query"
+        placeholder="ej. iPhone 15 Pro 256GB"
+        (keyup.enter)="search()" />
+    </div>
     <div class="ph-actions">
-      <button class="ph-btn" (click)="compare()"
-        [disabled]="loading() || !canCompare()">
+      <button class="ph-btn" (click)="search()"
+        [disabled]="loading() || !canSearch()">
         @if (loading()) {
           <span style="display:flex;align-items:center;justify-content:center;gap:6px">
             <svg class="spin" width="12" height="12" viewBox="0 0 24 24" fill="none">
@@ -25,7 +23,7 @@
             Buscando...
           </span>
         } @else {
-          Comparar
+          Buscar
         }
       </button>
       <button class="ph-btn-ghost" (click)="clearAll()">Limpiar</button>
@@ -36,7 +34,6 @@
     <div class="ph-error">{{ error() }}</div>
   }
 
-  <!-- Resultados -->
   @if (results().length > 0) {
     <div class="ph-main-header" style="margin-top:1.5rem">
       <span class="ph-main-title">Resultados</span>
@@ -60,7 +57,7 @@
   @if (results().length === 0 && !loading()) {
     <div class="ph-empty">
       <div class="ph-empty-icon">—</div>
-      <div class="ph-empty-text">Pega los links y presiona comparar</div>
+      <div class="ph-empty-text">Escribe un producto y presiona buscar</div>
     </div>
   }
 </div>

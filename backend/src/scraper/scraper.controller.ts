@@ -25,4 +25,8 @@ getAllHistory() {
 getProductHistory(@Param('id') id: number) {
   return this.scraperService.getProductHistory(id);
 }
+@Post('search')
+async searchByName(@Body() body: { query: string }) {
+  return this.scraperService.searchByName(body.query);
+}
 }
