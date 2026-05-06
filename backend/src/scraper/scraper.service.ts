@@ -60,73 +60,34 @@ export class ScraperService {
   const browser = await this.launchBrowser();
   const page = await this.newPage(browser);
   try {
-    await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-    
-    const debug = await page.evaluate(() => {
-      return {
-        title: document.title,
-        firstH2: document.querySelector('h2')?.textContent?.slice(0, 100),
-        hasResults: !!document.querySelector('.s-result-item[data-asin]'),
-        url: window.location.href,
-      };
+    await page.goto(
+      `https://www.google.com.mx/search?q=${encodeURIComponent(query + ' site:amazon.com.mx')}`,
+      { waitUntil: 'networkidle2' }
+    );
+    const url = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a'));
+      const amazonLink = links.find(l => l.href.includes('amazon.com.mx/dp/') || l.href.includes('amazon.com.mx/gp/'));
+      return amazonLink?.href || null;
     });
-    console.log('Amazon debug:', JSON.stringify(debug));
-
-   const url = await page.evaluate(() => {
-  // Intentar varios selectores de Amazon
-  const selectors = [
-    '.s-result-item[data-asin] h2 a',
-    '.s-search-results .a-link-normal.s-no-outline',
-    '[data-asin] .a-link-normal.s-underline-text',
-    '[data-asin] h2 .a-link-normal',
-  ];
-  
-  for (const selector of selectors) {
-    const link = document.querySelector(selector) as HTMLAnchorElement;
-    if (link && link.href) {
-      console.log('Selector funcionó:', selector, link.href);
-      return link.href;
-    }
-  }
-  return null;
-});
-    console.log('Amazon URL:', url);
+    console.log('Amazon via Google:', url);
     return url;
   } finally {
     await browser.close();
   }
 }
-  private async searchMercadoLibre(query: string): Promise<string | null> {
-  const browser = await this.launchBrowser();
-  const page = await this.newPage(browser);
+ private async searchMercadoLibre(query: string): Promise<string | null> {
   try {
-    await page.goto(`https://listado.mercadolibre.com.mx/${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-    
-    const debug = await page.evaluate(() => {
-      return {
-        title: document.title,
-        hasResults: !!document.querySelector('.ui-search-result'),
-        firstLink: document.querySelector('a')?.href?.slice(0, 100),
-      };
-    });
-    console.log('ML debug:', JSON.stringify(debug));
-
-    const url = await page.evaluate(() => {
-      const selectors = [
-        '.ui-search-item__group__element .ui-search-link',
-        '.ui-search-result__image a',
-        '.ui-search-link',
-      ];
-      for (const selector of selectors) {
-        const link = document.querySelector(selector) as HTMLAnchorElement;
-        if (link?.href) return link.href;
-      }
-      return null;
-    });
-    console.log('ML URL:', url);
-    return url;
-  } finally {
-    await browser.close();
+    const response = await fetch(
+      `https://api.mercadolibre.com/sites/MLM/search?q=${encodeURIComponent(query)}&limit=1`
+    );
+    const data = await response.json();
+    const firstResult = data.results?.[0];
+    if (!firstResult) return null;
+    console.log('ML API result:', firstResult.permalink);
+    return firstResult.permalink;
+  } catch (e) {
+    console.log('ML API error:', e);
+    return null;
   }
 }
 
