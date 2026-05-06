@@ -97,34 +97,72 @@ export class ScraperService {
   }
 }
   private async searchMercadoLibre(query: string): Promise<string | null> {
-    const browser = await this.launchBrowser();
-    const page = await this.newPage(browser);
-    try {
-      await page.goto(`https://listado.mercadolibre.com.mx/${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-      const url = await page.evaluate(() => {
-        const link = document.querySelector('.ui-search-item__group__element .ui-search-link') as HTMLAnchorElement;
-        return link ? link.href : null;
-      });
-      return url;
-    } finally {
-      await browser.close();
-    }
-  }
+  const browser = await this.launchBrowser();
+  const page = await this.newPage(browser);
+  try {
+    await page.goto(`https://listado.mercadolibre.com.mx/${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
+    
+    const debug = await page.evaluate(() => {
+      return {
+        title: document.title,
+        hasResults: !!document.querySelector('.ui-search-result'),
+        firstLink: document.querySelector('a')?.href?.slice(0, 100),
+      };
+    });
+    console.log('ML debug:', JSON.stringify(debug));
 
-  private async searchLiverpool(query: string): Promise<string | null> {
-    const browser = await this.launchBrowser();
-    const page = await this.newPage(browser);
-    try {
-      await page.goto(`https://www.liverpool.com.mx/tienda/search?q=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-      const url = await page.evaluate(() => {
-        const link = document.querySelector('.product-item a') as HTMLAnchorElement;
-        return link ? link.href : null;
-      });
-      return url;
-    } finally {
-      await browser.close();
-    }
+    const url = await page.evaluate(() => {
+      const selectors = [
+        '.ui-search-item__group__element .ui-search-link',
+        '.ui-search-result__image a',
+        '.ui-search-link',
+      ];
+      for (const selector of selectors) {
+        const link = document.querySelector(selector) as HTMLAnchorElement;
+        if (link?.href) return link.href;
+      }
+      return null;
+    });
+    console.log('ML URL:', url);
+    return url;
+  } finally {
+    await browser.close();
   }
+}
+
+private async searchLiverpool(query: string): Promise<string | null> {
+  const browser = await this.launchBrowser();
+  const page = await this.newPage(browser);
+  try {
+    await page.goto(`https://www.liverpool.com.mx/tienda/search?q=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
+    
+    const debug = await page.evaluate(() => {
+      return {
+        title: document.title,
+        hasResults: !!document.querySelector('.product-item'),
+        firstLink: document.querySelector('a')?.href?.slice(0, 100),
+      };
+    });
+    console.log('Liverpool debug:', JSON.stringify(debug));
+
+    const url = await page.evaluate(() => {
+      const selectors = [
+        '.product-item a',
+        '.plp-item a',
+        '.product-card a',
+      ];
+      for (const selector of selectors) {
+        const link = document.querySelector(selector) as HTMLAnchorElement;
+        if (link?.href) return link.href;
+      }
+      return null;
+    });
+    console.log('Liverpool URL:', url);
+    return url;
+  } finally {
+    await browser.close();
+  }
+}
 
   // ─── Scraping de producto individual ─────────────────────────────
 
