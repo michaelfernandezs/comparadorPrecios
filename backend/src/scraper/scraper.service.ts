@@ -92,36 +92,17 @@ export class ScraperService {
 }
 
 private async searchLiverpool(query: string): Promise<string | null> {
-  const browser = await this.launchBrowser();
-  const page = await this.newPage(browser);
   try {
-    await page.goto(`https://www.liverpool.com.mx/tienda/search?q=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
-    
-    const debug = await page.evaluate(() => {
-      return {
-        title: document.title,
-        hasResults: !!document.querySelector('.product-item'),
-        firstLink: document.querySelector('a')?.href?.slice(0, 100),
-      };
-    });
-    console.log('Liverpool debug:', JSON.stringify(debug));
-
-    const url = await page.evaluate(() => {
-      const selectors = [
-        '.product-item a',
-        '.plp-item a',
-        '.product-card a',
-      ];
-      for (const selector of selectors) {
-        const link = document.querySelector(selector) as HTMLAnchorElement;
-        if (link?.href) return link.href;
-      }
-      return null;
-    });
-    console.log('Liverpool URL:', url);
-    return url;
-  } finally {
-    await browser.close();
+    const response = await fetch(
+      `https://www.liverpool.com.mx/api/2.0/rest/model/atg/commerce/catalog/ProductCatalogActor/fullTextSearch?Ntt=${encodeURIComponent(query)}&No=0&Nrpp=1`
+    );
+    const data = await response.json();
+    const first = data.plpState?.records?.[0];
+    if (!first) return null;
+    const slug = first.attributes?.['product.seoURL']?.[0];
+    return slug ? `https://www.liverpool.com.mx${slug}` : null;
+  } catch (e) {
+    return null;
   }
 }
 
