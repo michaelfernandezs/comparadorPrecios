@@ -60,16 +60,21 @@ export class ScraperService {
   const browser = await this.launchBrowser();
   const page = await this.newPage(browser);
   try {
-    await page.goto(
-      `https://www.google.com.mx/search?q=${encodeURIComponent(query + ' site:amazon.com.mx')}`,
-      { waitUntil: 'networkidle2' }
-    );
+    await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
     const url = await page.evaluate(() => {
-      const links = Array.from(document.querySelectorAll('a'));
-      const amazonLink = links.find(l => l.href.includes('amazon.com.mx/dp/') || l.href.includes('amazon.com.mx/gp/'));
-      return amazonLink?.href || null;
+      const selectors = [
+        '.s-result-item[data-asin] h2 a',
+        '.s-search-results .a-link-normal.s-no-outline',
+        '[data-asin] .a-link-normal.s-underline-text',
+        '[data-asin] h2 .a-link-normal',
+      ];
+      for (const selector of selectors) {
+        const link = document.querySelector(selector) as HTMLAnchorElement;
+        if (link?.href) return link.href;
+      }
+      return null;
     });
-    console.log('Amazon via Google:', url);
+    console.log('Amazon URL:', url);
     return url;
   } finally {
     await browser.close();
@@ -82,11 +87,10 @@ export class ScraperService {
     );
     const data = await response.json();
     const firstResult = data.results?.[0];
-    if (!firstResult) return null;
-    console.log('ML API result:', firstResult.permalink);
-    return firstResult.permalink;
+    console.log('ML result:', firstResult?.permalink);
+    return firstResult?.permalink || null;
   } catch (e) {
-    console.log('ML API error:', e);
+    console.log('ML error:', e);
     return null;
   }
 }
@@ -97,11 +101,13 @@ private async searchLiverpool(query: string): Promise<string | null> {
       `https://www.liverpool.com.mx/api/2.0/rest/model/atg/commerce/catalog/ProductCatalogActor/fullTextSearch?Ntt=${encodeURIComponent(query)}&No=0&Nrpp=1`
     );
     const data = await response.json();
+    console.log('Liverpool raw:', JSON.stringify(data).slice(0, 300));
     const first = data.plpState?.records?.[0];
-    if (!first) return null;
-    const slug = first.attributes?.['product.seoURL']?.[0];
+    const slug = first?.attributes?.['product.seoURL']?.[0];
+    console.log('Liverpool slug:', slug);
     return slug ? `https://www.liverpool.com.mx${slug}` : null;
   } catch (e) {
+    console.log('Liverpool error:', e);
     return null;
   }
 }
