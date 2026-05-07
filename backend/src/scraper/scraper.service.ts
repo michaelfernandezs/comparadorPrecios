@@ -55,20 +55,35 @@ export class ScraperService {
   }
 
   // ─── Búsqueda por nombre en cada tienda ──────────────────────────
-
+private async searchMercadoLibre(query: string): Promise<string | null> {
+  try {
+    const shortQuery = query.split(' ').slice(0, 3).join(' ');
+    console.log('ML query:', shortQuery);
+    const response = await fetch(
+      `https://api.mercadolibre.com/sites/MLM/search?q=${encodeURIComponent(shortQuery)}&limit=1&condition=new`
+    );
+    const data = await response.json();
+    console.log('ML total:', data.paging?.total);
+    const firstResult = data.results?.[0];
+    console.log('ML result:', firstResult?.permalink);
+    return firstResult?.permalink || null;
+  } catch (e) {
+    console.log('ML error:', e);
+    return null;
+  }
+}
 private async searchAmazon(query: string): Promise<string | null> {
   const browser = await this.launchBrowser();
   const page = await this.newPage(browser);
   try {
-    await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
+    await page.goto(
+      `https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`,
+      { waitUntil: 'domcontentloaded', timeout: 30000 } // ← reducir timeout y usar domcontentloaded
+    );
     const url = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('[data-asin] h2 a')) as HTMLAnchorElement[];
-      
-      // Primero buscar link orgánico
       const organic = links.find(l => l.href && !l.href.includes('sspa'));
       if (organic) return organic.href;
-
-      // Fallback: extraer el /dp/ de un link patrocinado
       const sponsored = links.find(l => l.href.includes('sspa'));
       if (sponsored) {
         const dpMatch = sponsored.href.match(/\/dp\/([A-Z0-9]{10})/);
@@ -78,25 +93,11 @@ private async searchAmazon(query: string): Promise<string | null> {
     });
     console.log('Amazon URL:', url);
     return url;
+  } catch(e) {
+    console.log('Amazon error:', (e as Error).message);
+    return null;
   } finally {
     await browser.close();
-  }
-}
-
-private async searchMercadoLibre(query: string): Promise<string | null> {
-  try {
-    // Solo las primeras 3 palabras
-    const shortQuery = query.split(' ').slice(0, 3).join(' ');
-    const response = await fetch(
-      `https://api.mercadolibre.com/sites/MLM/search?q=${encodeURIComponent(shortQuery)}&limit=1`
-    );
-    const data = await response.json();
-    const firstResult = data.results?.[0];
-    console.log('ML result:', firstResult?.permalink);
-    return firstResult?.permalink || null;
-  } catch (e) {
-    console.log('ML error:', e);
-    return null;
   }
 }
 
