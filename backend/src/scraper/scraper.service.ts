@@ -63,9 +63,18 @@ private async searchAmazon(query: string): Promise<string | null> {
     await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
     const url = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('[data-asin] h2 a')) as HTMLAnchorElement[];
-      // Saltar links de anuncios (sspa/click)
-      const organic = links.find(l => l.href && !l.href.includes('sspa/click'));
-      return organic?.href || null;
+      
+      // Primero buscar link orgánico
+      const organic = links.find(l => l.href && !l.href.includes('sspa'));
+      if (organic) return organic.href;
+
+      // Fallback: extraer el /dp/ de un link patrocinado
+      const sponsored = links.find(l => l.href.includes('sspa'));
+      if (sponsored) {
+        const dpMatch = sponsored.href.match(/\/dp\/([A-Z0-9]{10})/);
+        if (dpMatch) return `https://www.amazon.com.mx/dp/${dpMatch[1]}`;
+      }
+      return null;
     });
     console.log('Amazon URL:', url);
     return url;
@@ -76,8 +85,8 @@ private async searchAmazon(query: string): Promise<string | null> {
 
 private async searchMercadoLibre(query: string): Promise<string | null> {
   try {
-    // Usar palabras clave más cortas para mejor resultado
-    const shortQuery = query.split(' ').slice(0, 4).join(' ');
+    // Solo las primeras 3 palabras
+    const shortQuery = query.split(' ').slice(0, 3).join(' ');
     const response = await fetch(
       `https://api.mercadolibre.com/sites/MLM/search?q=${encodeURIComponent(shortQuery)}&limit=1`
     );
