@@ -56,23 +56,16 @@ export class ScraperService {
 
   // ─── Búsqueda por nombre en cada tienda ──────────────────────────
 
- private async searchAmazon(query: string): Promise<string | null> {
+private async searchAmazon(query: string): Promise<string | null> {
   const browser = await this.launchBrowser();
   const page = await this.newPage(browser);
   try {
     await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2' });
     const url = await page.evaluate(() => {
-      const selectors = [
-        '.s-result-item[data-asin] h2 a',
-        '.s-search-results .a-link-normal.s-no-outline',
-        '[data-asin] .a-link-normal.s-underline-text',
-        '[data-asin] h2 .a-link-normal',
-      ];
-      for (const selector of selectors) {
-        const link = document.querySelector(selector) as HTMLAnchorElement;
-        if (link?.href) return link.href;
-      }
-      return null;
+      const links = Array.from(document.querySelectorAll('[data-asin] h2 a')) as HTMLAnchorElement[];
+      // Saltar links de anuncios (sspa/click)
+      const organic = links.find(l => l.href && !l.href.includes('sspa/click'));
+      return organic?.href || null;
     });
     console.log('Amazon URL:', url);
     return url;
@@ -80,10 +73,13 @@ export class ScraperService {
     await browser.close();
   }
 }
- private async searchMercadoLibre(query: string): Promise<string | null> {
+
+private async searchMercadoLibre(query: string): Promise<string | null> {
   try {
+    // Usar palabras clave más cortas para mejor resultado
+    const shortQuery = query.split(' ').slice(0, 4).join(' ');
     const response = await fetch(
-      `https://api.mercadolibre.com/sites/MLM/search?q=${encodeURIComponent(query)}&limit=1`
+      `https://api.mercadolibre.com/sites/MLM/search?q=${encodeURIComponent(shortQuery)}&limit=1`
     );
     const data = await response.json();
     const firstResult = data.results?.[0];
@@ -96,19 +92,27 @@ export class ScraperService {
 }
 
 private async searchLiverpool(query: string): Promise<string | null> {
+  const browser = await this.launchBrowser();
+  const page = await this.newPage(browser);
   try {
-    const response = await fetch(
-      `https://www.liverpool.com.mx/api/2.0/rest/model/atg/commerce/catalog/ProductCatalogActor/fullTextSearch?Ntt=${encodeURIComponent(query)}&No=0&Nrpp=1`
+    await page.goto(
+      `https://www.liverpool.com.mx/tienda/search?q=${encodeURIComponent(query)}`,
+      { waitUntil: 'networkidle2' }
     );
-    const data = await response.json();
-    console.log('Liverpool raw:', JSON.stringify(data).slice(0, 300));
-    const first = data.plpState?.records?.[0];
-    const slug = first?.attributes?.['product.seoURL']?.[0];
-    console.log('Liverpool slug:', slug);
-    return slug ? `https://www.liverpool.com.mx${slug}` : null;
-  } catch (e) {
-    console.log('Liverpool error:', e);
-    return null;
+    await new Promise(r => setTimeout(r, 3000));
+    const url = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
+      const product = links.find(l => 
+        l.href.includes('/tienda/pdp/') || 
+        l.href.includes('/tienda/p/')
+      );
+      console.log('Liverpool link encontrado:', product?.href);
+      return product?.href || null;
+    });
+    console.log('Liverpool URL:', url);
+    return url;
+  } finally {
+    await browser.close();
   }
 }
 
