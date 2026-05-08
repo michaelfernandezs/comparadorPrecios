@@ -55,42 +55,61 @@ export class ScraperService {
   }
 
   // ─── Búsqueda por nombre en cada tienda ──────────────────────────
-private async searchMercadoLibre(query: string): Promise<string | null> {
+
+
+  private async searchMercadoLibre(query: string): Promise<string | null> {
+  const browser = await this.launchBrowser();
+  const page = await this.newPage(browser);
   try {
     const shortQuery = query.split(' ').slice(0, 3).join(' ');
-    console.log('ML query:', shortQuery);
-    const response = await fetch(
-      `https://api.mercadolibre.com/sites/MLM/search?q=${encodeURIComponent(shortQuery)}&limit=1&condition=new`
+    await page.goto(
+      `https://listado.mercadolibre.com.mx/${encodeURIComponent(shortQuery)}`,
+      { waitUntil: 'domcontentloaded', timeout: 30000 }
     );
-    const data = await response.json();
-    console.log('ML total:', data.paging?.total);
-    const firstResult = data.results?.[0];
-    console.log('ML result:', firstResult?.permalink);
-    return firstResult?.permalink || null;
-  } catch (e) {
-    console.log('ML error:', e);
+    await new Promise(r => setTimeout(r, 2000));
+    const url = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
+      const product = links.find(l =>
+        l.href.includes('mercadolibre.com.mx/') &&
+        (l.href.includes('-MLM') || l.href.includes('/p/MLM'))
+      );
+      return product?.href || null;
+    });
+    console.log('ML URL:', url);
+    return url;
+  } catch(e) {
+    console.log('ML error:', (e as Error).message);
     return null;
+  } finally {
+    await browser.close();
   }
 }
+
+
 private async searchAmazon(query: string): Promise<string | null> {
   const browser = await this.launchBrowser();
   const page = await this.newPage(browser);
   try {
-    await page.goto(
-      `https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`,
-      { waitUntil: 'domcontentloaded', timeout: 30000 } // ← reducir timeout y usar domcontentloaded
-    );
-    const url = await page.evaluate(() => {
-      const links = Array.from(document.querySelectorAll('[data-asin] h2 a')) as HTMLAnchorElement[];
-      const organic = links.find(l => l.href && !l.href.includes('sspa'));
-      if (organic) return organic.href;
-      const sponsored = links.find(l => l.href.includes('sspa'));
-      if (sponsored) {
-        const dpMatch = sponsored.href.match(/\/dp\/([A-Z0-9]{10})/);
-        if (dpMatch) return `https://www.amazon.com.mx/dp/${dpMatch[1]}`;
-      }
-      return null;
-    });
+    await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2', timeout: 40000 });
+    
+    // Esperar a que carguen los resultados reales
+    await page.waitForSelector('[data-asin]:not([data-asin=""])', { timeout: 10000 }).catch(() => {});
+    await new Promise(r => setTimeout(r, 2000));
+
+   const url = await page.evaluate(() => {
+  // Buscar cualquier link de producto de Amazon
+  const links = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
+  const product = links.find(l => 
+    l.href.includes('amazon.com.mx') && 
+    (l.href.includes('/dp/') || l.href.includes('/gp/product/'))
+  );
+  if (product) {
+    const dpMatch = product.href.match(/\/dp\/([A-Z0-9]{10})/);
+    if (dpMatch) return `https://www.amazon.com.mx/dp/${dpMatch[1]}`;
+  }
+  return null;
+});
+
     console.log('Amazon URL:', url);
     return url;
   } catch(e) {

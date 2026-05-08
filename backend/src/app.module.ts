@@ -10,12 +10,15 @@ import { PriceHistory } from './scraper/price-history.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
+TypeOrmModule.forRoot({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
+  host: 'localhost',
+  port: 5432,
+  username: 'postgres',
+  password: '123456',
+  database: 'price_comparator',
   entities: [Comparison, SearchResult, TrackedProduct, PriceHistory],
   synchronize: true,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 }),
     ScraperModule,
   ],
