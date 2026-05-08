@@ -42,14 +42,19 @@
     <div class="ph-results">
       @for (product of results(); track $index) {
         <div class="ph-row" [class.ph-row-winner]="$index === 0">
-          <span class="ph-rank" [class.ph-rank-winner]="$index === 0">0{{ $index + 1 }}</span>
-          <span class="ph-row-store" [class.ph-row-store-winner]="$index === 0">{{ product.store }}</span>
-          <span class="ph-row-title" [class.ph-row-title-winner]="$index === 0">{{ product.title }}</span>
-          <span class="ph-row-price" [class.ph-row-price-winner]="$index === 0">{{ product.price }}</span>
-          @if ($index === 0) {
-            <span class="ph-badge">Mejor</span>
-          }
-        </div>
+  <!-- Imagen -->
+  <div class="ph-row-img">
+    <img [src]="product.image" [alt]="product.title" 
+         onerror="this.style.display='none'" />
+  </div>
+  <span class="ph-rank" [class.ph-rank-winner]="$index === 0">0{{ $index + 1 }}</span>
+  <span class="ph-row-store" [class.ph-row-store-winner]="$index === 0">{{ product.store }}</span>
+  <span class="ph-row-title" [class.ph-row-title-winner]="$index === 0">{{ product.title }}</span>
+  <span class="ph-row-price" [class.ph-row-price-winner]="$index === 0">{{ product.price }}</span>
+  @if ($index === 0) {
+    <span class="ph-badge">Mejor</span>
+  }
+</div>
       }
     </div>
   }

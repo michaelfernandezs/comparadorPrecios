@@ -45,24 +45,30 @@
               <span class="hi-group-count">{{ comparison.results.length }} tiendas</span>
             </div>
 
-            <!-- Resultados -->
+            <
             @for (result of comparison.results; track result.id) {
-              <div class="hi-row"
-                   [class.hi-row-winner]="result.store === comparison.winner"
-                   (click)="openChart(result)">
-                <span class="hi-row-store" [class.hi-row-store-winner]="result.store === comparison.winner">
-                  {{ result.store }}
-                </span>
-                <span class="hi-row-title">{{ result.title }}</span>
-                <span class="hi-row-price" [class.hi-row-price-winner]="result.store === comparison.winner">
-                  {{ result.price }}
-                </span>
-                <a [href]="result.url" target="_blank"
-                   class="hi-row-link"
-                   (click)="$event.stopPropagation()">Ver →</a>
-              </div>
-            }
+  <div class="hi-row"
+       [class.hi-row-winner]="result.store === comparison.winner"
+       (click)="openChart(result)">
+    
+    <!-- Imagen -->
+    <div class="hi-row-img">
+      <img [src]="result.image" [alt]="result.title"
+           onerror="this.style.display='none'" />
+    </div>
 
+    <span class="hi-row-store" [class.hi-row-store-winner]="result.store === comparison.winner">
+      {{ result.store }}
+    </span>
+    <span class="hi-row-title">{{ result.title }}</span>
+    <span class="hi-row-price" [class.hi-row-price-winner]="result.store === comparison.winner">
+      {{ result.price }}
+    </span>
+    <a [href]="result.url" target="_blank"
+       class="hi-row-link"
+       (click)="$event.stopPropagation()">Ver →</a>
+  </div>
+}
           </div>
         }
       </div>

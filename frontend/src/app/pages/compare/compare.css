@@ -138,3 +138,22 @@
   .ph-main { padding: 1rem; }
   .ph-row-title { display: none; }
 }
+
+.ph-row-img {
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  border-radius: 4px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.ph-row-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
