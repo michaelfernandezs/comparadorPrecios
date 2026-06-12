@@ -7,9 +7,10 @@ import { Comparison } from './scraper/comparison.entity';
 import { SearchResult } from './scraper/search-result.entity';
 import { TrackedProduct } from './scraper/tracked-product.entity';
 import { PriceHistory } from './scraper/price-history.entity';
-
+import {ScheduleModule} from '@nestjs/schedule';
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
 TypeOrmModule.forRoot({
   type: 'postgres',
   url: process.env.DATABASE_URL,

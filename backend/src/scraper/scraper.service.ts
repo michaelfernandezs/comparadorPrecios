@@ -6,10 +6,35 @@ import { Comparison } from './comparison.entity';
 import { SearchResult } from './search-result.entity';
 import { PriceHistory } from './price-history.entity';
 import { TrackedProduct } from './tracked-product.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-
+@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+async updateAllPrices() {
+  console.log('Actualizando precios...');
+  const products = await this.trackedProductRepository.find();
+  
+  for (const product of products) {
+    try {
+      const data = await this.scrapeUrl(product.url);
+      if (data.price !== 'Sin precio') {
+        product.currentPrice = data.price;
+        await this.trackedProductRepository.save(product);
+        await this.priceHistoryRepository.save(
+          this.priceHistoryRepository.create({
+            price: data.price,
+            trackedProduct: product,
+          })
+        );
+        console.log(`Precio actualizado: ${product.title} → ${data.price}`);
+      }
+    } catch(e) {
+      console.log(`Error actualizando ${product.title}:`, (e as Error).message);
+    }
+  }
+  console.log('Actualización completa');
+}
   constructor(
     @InjectRepository(Comparison)
     private comparisonRepository: Repository<Comparison>,
