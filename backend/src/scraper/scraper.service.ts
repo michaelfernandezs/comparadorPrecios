@@ -10,7 +10,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-@Cron(CronExpression.EVERY_30_MINUTES)
+@Cron(CronExpression.EVERY_30_MINUTES,{name: 'updatePrices'})
 async updateAllPrices() {
   console.log('Actualizando precios...');
   const products = await this.trackedProductRepository.find();
