@@ -209,8 +209,7 @@ private async searchLiverpool(query: string): Promise<string | null> {
           price       = document.querySelector('.a-product__paragraphDiscountPrice')?.textContent || price;
           description = document.querySelector('.productDetailTab')?.textContent || description;
           image       = (document.querySelector('.carouselGallery img') as HTMLImageElement)?.src || image;
-          if (price !== 'Sin precio') price = price.slice(0, -2);
-
+          if (price !== 'Sin precio') price = price.replace(/\s+/g, '').trim();
         } else if (hostname.includes('amazon')) {
           store       = 'Amazon';
           title       = document.querySelector('#productTitle')?.textContent || title;

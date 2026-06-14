@@ -72,9 +72,11 @@ export class HistoryComponent implements OnInit {
     const labels = history.map((h: any) =>
       new Date(h.recordedAt).toLocaleDateString('es-MX')
     );
-    const prices = history.map((h: any) =>
-      parseFloat(h.price.replace(/[^0-9.]/g, ''))
-    );
+    
+    const prices = history.map((h: any) => {
+      const clean = h.price.replace(/[$,\s]/g, '').replace(/(\d+)0$/, '$1');
+      return parseFloat(clean) || 0;
+});
 
     this.chart = new Chart(canvas, {
       type: 'line',
