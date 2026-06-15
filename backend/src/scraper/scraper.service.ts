@@ -10,15 +10,24 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-@Cron(CronExpression.EVERY_30_MINUTES,{name: 'updatePrices'})
+@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'update-prices' })
 async updateAllPrices() {
   console.log('Actualizando precios...');
-  const products = await this.trackedProductRepository.find();
-  
+  const products = await this.trackedProductRepository.find({
+    relations: ['priceHistory'],
+  });
+
   for (const product of products) {
     try {
       const data = await this.scrapeUrl(product.url);
-      if (data.price !== 'Sin precio') {
+      if (data.price === 'Sin precio') continue;
+
+      // Obtener el último precio registrado
+      const lastPrice = product.priceHistory
+        .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime())[0];
+
+      // Solo guardar si el precio cambió o no hay historial
+      if (!lastPrice || lastPrice.price !== data.price) {
         product.currentPrice = data.price;
         await this.trackedProductRepository.save(product);
         await this.priceHistoryRepository.save(
@@ -28,9 +37,11 @@ async updateAllPrices() {
           })
         );
         console.log(`Precio actualizado: ${product.title} → ${data.price}`);
+      } else {
+        console.log(`Sin cambio: ${product.title} → ${data.price}`);
       }
     } catch(e) {
-      console.log(`Error actualizando ${product.title}:`, (e as Error).message);
+      console.log(`Error: ${product.title}`, (e as Error).message);
     }
   }
   console.log('Actualización completa');
