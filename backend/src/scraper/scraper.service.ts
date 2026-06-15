@@ -59,8 +59,11 @@ async updateAllPrices() {
 
   // ─── Métodos privados de Puppeteer ───────────────────────────────
 
-  private async launchBrowser() {
-    return puppeteer.launch({
+ private browser: any = null;
+
+private async getBrowser() {
+  if (!this.browser || !this.browser.isConnected()) {
+    this.browser = await puppeteer.launch({
       headless: true,
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: [
@@ -74,27 +77,28 @@ async updateAllPrices() {
       ],
     });
   }
+  return this.browser;
+}
 
-  private async newPage(browser: any) {
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1920, height: 1080 });
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-    await page.evaluateOnNewDocument(() => {
-      Object.defineProperty(navigator, 'webdriver', { get: () => false });
-    });
-    await page.setDefaultNavigationTimeout(70000);
-    await page.setExtraHTTPHeaders({
-      'Accept-Language': 'es-MX,es;q=0.9',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-    });
-    return page;
-  }
-
+private async newPage(browser: any) {
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1920, height: 1080 });
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+  });
+  await page.setDefaultNavigationTimeout(70000);
+  await page.setExtraHTTPHeaders({
+    'Accept-Language': 'es-MX,es;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+  });
+  return page;
+}
   // ─── Búsqueda por nombre en cada tienda ──────────────────────────
 
 
   private async searchMercadoLibre(query: string): Promise<string | null> {
-  const browser = await this.launchBrowser();
+  const browser = await this.getBrowser();
   const page = await this.newPage(browser);
   try {
     const shortQuery = query.split(' ').slice(0, 3).join(' ');
@@ -123,7 +127,7 @@ async updateAllPrices() {
 
 
 private async searchAmazon(query: string): Promise<string | null> {
-  const browser = await this.launchBrowser();
+  const browser = await this.getBrowser();
   const page = await this.newPage(browser);
   try {
     await page.goto(`https://www.amazon.com.mx/s?k=${encodeURIComponent(query)}`, { waitUntil: 'networkidle2', timeout: 40000 });
@@ -157,7 +161,7 @@ private async searchAmazon(query: string): Promise<string | null> {
 }
 
 private async searchLiverpool(query: string): Promise<string | null> {
-  const browser = await this.launchBrowser();
+  const browser = await this.getBrowser();
   const page = await this.newPage(browser);
   try {
     await page.goto(
@@ -184,7 +188,7 @@ private async searchLiverpool(query: string): Promise<string | null> {
   // ─── Scraping de producto individual ─────────────────────────────
 
   private async scrapeUrl(url: string) {
-    const browser = await this.launchBrowser();
+    const browser = await this.getBrowser();
     const page = await this.newPage(browser);
     try {
       await page.goto(url, { waitUntil: 'networkidle2' });
