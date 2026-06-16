@@ -65,4 +65,32 @@
       <div class="ph-empty-text">Escribe un producto y presiona buscar</div>
     </div>
   }
+  @if (priceDrops().length > 0) {
+  <div class="ph-drops">
+    <div class="ph-main-header" style="margin-bottom: 0.75rem">
+      <span class="ph-main-title">Cambios de precio recientes</span>
+    </div>
+    <div class="ph-drops-grid">
+      @for (product of priceDrops(); track product.id) {
+        <div class="ph-drop-card">
+          <div class="ph-drop-img">
+            <img [src]="product.image" [alt]="product.title"
+                 onerror="this.style.display='none'" />
+          </div>
+          <div class="ph-drop-info">
+            <div class="ph-drop-store">{{ product.store }}</div>
+            <div class="ph-drop-title">{{ product.title }}</div>
+            <div class="ph-drop-prices">
+              <span class="ph-drop-current">{{ product.currentPrice }}</span>
+              <span class="ph-drop-previous">{{ product.previousPrice }}</span>
+              <span class="ph-drop-badge" [class.ph-drop-badge-up]="product.increased">
+                {{ product.increased ? '↑' : '↓' }} {{ product.pct }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
 </div>

@@ -347,4 +347,40 @@ private async searchLiverpool(query: string): Promise<string | null> {
 
     return product;
   }
+
+
+  async getPriceDrops() {
+  const products = await this.trackedProductRepository.find({
+    relations: ['priceHistory'],
+  });
+
+  const drops = products
+    .filter(p => p.priceHistory.length >= 2)
+    .map(p => {
+      const sorted = p.priceHistory.sort(
+        (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
+      );
+      const latest = parseFloat(sorted[0].price.replace(/[^0-9.]/g, '')) || 0;
+      const previous = parseFloat(sorted[1].price.replace(/[^0-9.]/g, '')) || 0;
+      const diff = previous - latest;
+      const pct = previous > 0 ? (diff / previous) * 100 : 0;
+
+      return {
+        id: p.id,
+        title: p.title,
+        store: p.store,
+        image: p.image,
+        currentPrice: sorted[0].price,
+        previousPrice: sorted[1].price,
+        diff: diff.toFixed(2),
+        pct: pct.toFixed(1),
+        increased: diff < 0,
+      };
+    })
+    .filter(p => Math.abs(parseFloat(p.diff)) > 0)
+    .sort((a, b) => Math.abs(parseFloat(b.diff)) - Math.abs(parseFloat(a.diff)))
+    .slice(0, 6);
+
+  return drops;
+}
 }

@@ -45,4 +45,13 @@ export class CompareComponent {
     this.results.set([]);
     this.error.set('');
   }
+
+  priceDrops = signal<any[]>([]);
+
+ngOnInit() {
+  this.productService.getPriceDrops().subscribe({
+    next: (data) => this.priceDrops.set(data),
+    error: () => {}
+  });
+}
 }

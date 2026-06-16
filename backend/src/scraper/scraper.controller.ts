@@ -27,4 +27,9 @@ getProductHistory(@Param('id') id: number) {
 async searchByName(@Body() body: { query: string }) {
   return this.scraperService.searchByName(body.query);
 }
+
+@Get('price-drops')
+getPriceDrops() {
+  return this.scraperService.getPriceDrops();
+}
 }

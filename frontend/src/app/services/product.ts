@@ -29,4 +29,7 @@ export class ProductService {
   getProductHistory(id: number): Observable<any> {
     return this.http.get(`${API}/history/${id}`);
   }
+  getPriceDrops(): Observable<any[]> {
+  return this.http.get<any[]>(`${API}/price-drops`);
+}
 }
