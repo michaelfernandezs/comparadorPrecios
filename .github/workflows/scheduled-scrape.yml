@@ -1,0 +1,28 @@
+name: Scraping diario de precios
+
+on:
+  schedule:
+    # 06:00 UTC = 00:00 hora del centro de México (UTC-6, sin horario de verano)
+    - cron: "0 6 * * *"
+  # Permite dispararlo manualmente desde la pestaña "Actions" de GitHub, útil para probar
+  workflow_dispatch:
+
+jobs:
+  trigger-scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar al endpoint de actualización de precios
+        run: |
+          echo "Disparando actualización de precios..."
+          response=$(curl -s -o response.json -w "%{http_code}" \
+            -X POST "${{ secrets.RENDER_API_URL }}/scrape/update-all" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            --max-time 300)
+
+          echo "Código de respuesta HTTP: $response"
+          cat response.json
+
+          if [ "$response" -ne 200 ]; then
+            echo "El endpoint respondió con error."
+            exit 1
+          fi

@@ -6,12 +6,14 @@ import { Comparison } from './comparison.entity';
 import { SearchResult } from './search-result.entity';
 import { PriceHistory } from './price-history.entity';
 import { TrackedProduct } from './tracked-product.entity';
-import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ScraperService {
-@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { name: 'update-prices' })
-async updateAllPrices() {
+  // Antes tenía @Cron(EVERY_DAY_AT_MIDNIGHT) aquí. Se quitó a propósito:
+  // en Cloud Run el proceso escala a cero sin tráfico, así que un cron
+  // interno no es confiable. Ahora este método lo dispara un Cloud Run Job
+  // externo, invocado por Cloud Scheduler. Ver src/job.ts.
+  async updateAllPrices() {
   console.log('Actualizando precios...');
   const products = await this.trackedProductRepository.find({
     relations: ['priceHistory'],

@@ -7,10 +7,8 @@ import { Comparison } from './scraper/comparison.entity';
 import { SearchResult } from './scraper/search-result.entity';
 import { TrackedProduct } from './scraper/tracked-product.entity';
 import { PriceHistory } from './scraper/price-history.entity';
-import {ScheduleModule} from '@nestjs/schedule';
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
 TypeOrmModule.forRoot({
   type: 'postgres',
   url: process.env.DATABASE_URL,
@@ -21,7 +19,7 @@ TypeOrmModule.forRoot({
   database: process.env.DATABASE_URL ? undefined : 'price_comparator',
   entities: [Comparison, SearchResult, TrackedProduct, PriceHistory],
   synchronize: true,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 }),
     ScraperModule,
   ],
