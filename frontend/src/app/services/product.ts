@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-const API = 'https://empowering-healing-production-a1c8.up.railway.app/scrape';
+const API = 'https://pricehunter-api-726516153570.us-central1.run.app/scrape';
 
 export interface ProductResult {
   title: string;
