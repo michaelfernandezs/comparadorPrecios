@@ -1,3 +1,4 @@
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -177,7 +178,7 @@ private async searchLiverpool(query: string): Promise<string | null> {
   const page = await this.newPage(browser);
   try {
     await page.goto(
-      `https://www.liverpool.com.mx/tienda/search?q=${encodeURIComponent(query)}`,
+      `https://www.liverpool.com.mx/tienda?s=${encodeURIComponent(query)}`,
       { waitUntil: 'networkidle2' }
     );
     await new Promise(r => setTimeout(r, 3000));
