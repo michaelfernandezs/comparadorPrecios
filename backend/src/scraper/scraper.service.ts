@@ -10,7 +10,7 @@ import { TrackedProduct } from './tracked-product.entity';
 @Injectable()
 export class ScraperService {
   // Antes tenía @Cron(EVERY_DAY_AT_MIDNIGHT) aquí. Se quitó a propósito:
-  // en Cloud Run el proceso escala acurl -i -X POST "https://pricehunter-api-726516153570.us-central1.run.app/scrape/search" -H "Content-Type: application/json" -d "{\"query\":\"iphone\"}" cero sin tráfico, así que un cron
+  // en Cloud Run el proceso escala a cero sin tráfico, así que un cron
   // interno no es confiable. Ahora este método lo dispara un Cloud Run Job
   // externo, invocado por Cloud Scheduler. Ver src/job.ts.
   async updateAllPrices() {
@@ -218,6 +218,13 @@ private async searchLiverpool(query: string): Promise<string | null> {
       } else if (url.includes('liverpool')) {
         await page.waitForSelector('.a-product__information--title', { timeout: 20000 }).catch(() => {});
       }
+
+      const pageDebug = await page.evaluate(() => ({
+        title: document.title,
+        hostname: window.location.hostname,
+        snippet: document.body?.innerText?.slice(0, 200),
+      }));
+      console.log('SCRAPE_URL DEBUG:', JSON.stringify(pageDebug));
 
       const data = await page.evaluate(() => {
         const hostname = window.location.hostname;
