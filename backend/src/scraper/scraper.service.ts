@@ -216,7 +216,7 @@ private async searchLiverpool(query: string): Promise<string | null> {
       } else if (url.includes('amazon')) {
         await page.waitForSelector('#productTitle', { timeout: 20000 }).catch(() => {});
       } else if (url.includes('liverpool')) {
-        await page.waitForSelector('.a-product__information--title', { timeout: 20000 }).catch(() => {});
+        await page.waitForSelector('h1', { timeout: 20000 }).catch(() => {});
       }
 
       const pageDebug = await page.evaluate(() => ({
@@ -244,8 +244,10 @@ private async searchLiverpool(query: string): Promise<string | null> {
 
         } else if (hostname.includes('liverpool')) {
           store       = 'Liverpool';
-          title       = document.querySelector('.a-product__information--title')?.textContent || title;
-          price       = document.querySelector('.a-product__paragraphDiscountPrice')?.textContent || price;
+          title       = document.querySelector('h1')?.textContent || title;
+          price       = document.querySelector('[data-testid="discounted"]')?.textContent
+                       || document.querySelector('.a-product__paragraphDiscountPrice')?.textContent
+                       || price;
           description = document.querySelector('.productDetailTab')?.textContent || description;
           image       = (document.querySelector('.carouselGallery img') as HTMLImageElement)?.src || image;
           if (price !== 'Sin precio') price = price.replace(/\s+/g, '').trim();
