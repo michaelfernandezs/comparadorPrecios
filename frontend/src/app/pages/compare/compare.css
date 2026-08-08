@@ -1,6 +1,6 @@
 .ph-main {
   font-family: 'Geist', sans-serif;
-  background: #12130F;
+  background: #F5F6F7;
   min-height: calc(100vh - 48px);
   max-width: 680px;
   margin: 0 auto;
@@ -13,25 +13,25 @@
   align-items: center;
   margin-bottom: 1rem;
 }
-.ph-main-title { font-size: 13px; font-weight: 500; color: #FBF5F3; }
-.ph-main-sub { font-family: 'Geist Mono', monospace; font-size: 10px; color: #94A3B8; }
+.ph-main-title { font-size: 13px; font-weight: 500; color: #23272E; }
+.ph-main-sub { font-family: 'Geist Mono', monospace; font-size: 10px; color: #6B7280; }
 
 .ph-form {
-  background: #0D1B2A;
-  border: 1px solid #3B82F6;
+  background: #FFFFFF;
+  border: 1px solid #D8DADD;
   padding: 1.5rem;
   margin-bottom: 1rem;
   border-radius: 6px;
 }
 
 .ph-field { margin-bottom: 0.6rem; }
-.ph-store-tag { font-size: 10px; color: #94A3B8; }
+.ph-store-tag { font-size: 10px; color: #6B7280; }
 
 .ph-input {
   width: 100%;
-  background: #1A2F4A;
-  border: 1px solid #2D4A6B;
-  color: #FBF5F3;
+  background: #FFFFFF;
+  border: 1px solid #D8DADD;
+  color: #23272E;
   font-family: 'Geist', sans-serif;
   font-size: 11px;
   padding: 8px 10px;
@@ -39,14 +39,14 @@
   transition: border-color 0.15s;
   border-radius: 4px;
 }
-.ph-input::placeholder { color: #4A6080; }
-.ph-input:focus { border-color: #3B82F6; background: #1e3a5f; }
+.ph-input::placeholder { color: #9CA3AF; }
+.ph-input:focus { border-color: #23272E; background: #FFFFFF; }
 
 .ph-actions { display: flex; gap: 8px; margin-top: 1rem; }
 
 .ph-btn {
-  background: #3B82F6;
-  color: #FBF5F3;
+  background: #23272E;
+  color: #FFFFFF;
   border: none;
   font-family: 'Geist', sans-serif;
   font-size: 12px;
@@ -61,8 +61,8 @@
 
 .ph-btn-ghost {
   background: transparent;
-  color: #94A3B8;
-  border: 1px solid #2D4A6B;
+  color: #6B7280;
+  border: 1px solid #D8DADD;
   font-family: 'Geist', sans-serif;
   font-size: 12px;
   padding: 10px 16px;
@@ -70,13 +70,13 @@
   border-radius: 4px;
   transition: all 0.15s;
 }
-.ph-btn-ghost:hover { border-color: #3B82F6; color: #FBF5F3; }
+.ph-btn-ghost:hover { border-color: #23272E; color: #23272E; }
 
 .ph-error {
   font-size: 11px;
-  color: #f0997b;
-  background: #2e1f1a;
-  border: 1px solid #4a2e1f;
+  color: #C7402F;
+  background: #FBEAE7;
+  border: 1px solid #F0C4BC;
   border-radius: 4px;
   padding: 8px 10px;
   margin-bottom: 1rem;
@@ -85,34 +85,34 @@
 .ph-results { display: flex; flex-direction: column; gap: 6px; }
 
 .ph-row {
-  background: #1A2F4A;
-  border: 1px solid #2D4A6B;
+  background: #FFFFFF;
+  border: 1px solid #E4E5E8;
   border-radius: 6px;
   display: flex;
   align-items: center;
   padding: 1rem 1.2rem;
   gap: 1rem;
 }
-.ph-row-winner { border-color: #3B82F6; background: #1e3a5f; }
+.ph-row-winner { border-color: #2F8F5E; background: #EAF5EF; }
 
-.ph-rank { font-family: 'Geist Mono', monospace; font-size: 10px; color: #94A3B8; width: 20px; flex-shrink: 0; }
-.ph-rank-winner { color: #60A5FA; }
+.ph-rank { font-family: 'Geist Mono', monospace; font-size: 10px; color: #9CA3AF; width: 20px; flex-shrink: 0; }
+.ph-rank-winner { color: #2F8F5E; }
 
-.ph-row-store { font-family: 'Geist Mono', monospace; font-size: 10px; color: #94A3B8; width: 90px; flex-shrink: 0; }
-.ph-row-store-winner { color: #3B82F6; }
+.ph-row-store { font-family: 'Geist Mono', monospace; font-size: 10px; color: #6B7280; width: 90px; flex-shrink: 0; }
+.ph-row-store-winner { color: #1F6B45; }
 
-.ph-row-title { font-size: 12px; color: #94A3B8; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ph-row-title-winner { color: #60A5FA; }
+.ph-row-title { font-size: 12px; color: #6B7280; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-row-title-winner { color: #1F6B45; }
 
-.ph-row-price { font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 500; color: #FBF5F3; flex-shrink: 0; }
-.ph-row-price-winner { color: #FBF5F3; }
+.ph-row-price { font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 500; color: #23272E; flex-shrink: 0; }
+.ph-row-price-winner { color: #1F6B45; }
 
 .ph-badge {
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(59, 130, 246, 0.15);
-  color: #60A5FA;
+  background: rgba(47, 143, 94, 0.12);
+  color: #1F6B45;
   padding: 2px 7px;
   border-radius: 3px;
   flex-shrink: 0;
@@ -126,8 +126,8 @@
   height: 300px;
   gap: 0.5rem;
 }
-.ph-empty-icon { font-family: 'Geist Mono', monospace; font-size: 24px; color: #2D4A6B; }
-.ph-empty-text { font-size: 12px; color: #94A3B8; }
+.ph-empty-icon { font-family: 'Geist Mono', monospace; font-size: 24px; color: #D8DADD; }
+.ph-empty-text { font-size: 12px; color: #6B7280; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
@@ -165,8 +165,8 @@
 }
 
 .ph-drop-card {
-  background: #1A2F4A;
-  border: 1px solid #2D4A6B;
+  background: #FFFFFF;
+  border: 1px solid #E4E5E8;
   border-radius: 6px;
   padding: 0.75rem;
   display: flex;
@@ -198,13 +198,13 @@
   font-family: 'Geist Mono', monospace;
   font-size: 9px;
   text-transform: uppercase;
-  color: #94A3B8;
+  color: #6B7280;
   margin-bottom: 2px;
 }
 
 .ph-drop-title {
   font-size: 11px;
-  color: #94A3B8;
+  color: #6B7280;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -222,26 +222,26 @@
   font-family: 'Geist Mono', monospace;
   font-size: 12px;
   font-weight: 500;
-  color: #FBF5F3;
+  color: #23272E;
 }
 
 .ph-drop-previous {
   font-family: 'Geist Mono', monospace;
   font-size: 10px;
-  color: #4A6080;
+  color: #9CA3AF;
   text-decoration: line-through;
 }
 
 .ph-drop-badge {
   font-size: 9px;
   font-weight: 500;
-  background: rgba(59, 193, 74, 0.1);
-  color: #3BC14A;
+  background: rgba(47, 143, 94, 0.12);
+  color: #1F6B45;
   padding: 2px 5px;
   border-radius: 3px;
 }
 
 .ph-drop-badge-up {
-  background: #2e1f1a;
-  color: #f0997b;
+  background: rgba(199, 64, 47, 0.1);
+  color: #C7402F;
 }
