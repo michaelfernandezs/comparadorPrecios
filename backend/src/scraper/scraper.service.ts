@@ -10,7 +10,7 @@ import { TrackedProduct } from './tracked-product.entity';
 @Injectable()
 export class ScraperService {
   // Antes tenía @Cron(EVERY_DAY_AT_MIDNIGHT) aquí. Se quitó a propósito:
-  // en Cloud Run el proceso escala a cero sin tráfico, así que un cron
+  // en Cloud Run el proceso escala acurl -i -X POST "https://pricehunter-api-726516153570.us-central1.run.app/scrape/search" -H "Content-Type: application/json" -d "{\"query\":\"iphone\"}" cero sin tráfico, así que un cron
   // interno no es confiable. Ahora este método lo dispara un Cloud Run Job
   // externo, invocado por Cloud Scheduler. Ver src/job.ts.
   async updateAllPrices() {
@@ -109,6 +109,11 @@ private async newPage(browser: any) {
       { waitUntil: 'domcontentloaded', timeout: 30000 }
     );
     await new Promise(r => setTimeout(r, 2000));
+    const debugInfo = await page.evaluate(() => ({
+      title: document.title,
+      snippet: document.body?.innerText?.slice(0, 300),
+    }));
+    console.log('ML DEBUG:', JSON.stringify(debugInfo));
     const url = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
       const product = links.find(l =>
@@ -137,6 +142,11 @@ private async searchAmazon(query: string): Promise<string | null> {
     // Esperar a que carguen los resultados reales
     await page.waitForSelector('[data-asin]:not([data-asin=""])', { timeout: 10000 }).catch(() => {});
     await new Promise(r => setTimeout(r, 2000));
+    const debugInfoAmz = await page.evaluate(() => ({
+      title: document.title,
+      snippet: document.body?.innerText?.slice(0, 300),
+    }));
+    console.log('Amazon DEBUG:', JSON.stringify(debugInfoAmz));
 
    const url = await page.evaluate(() => {
   // Buscar cualquier link de producto de Amazon
@@ -171,6 +181,11 @@ private async searchLiverpool(query: string): Promise<string | null> {
       { waitUntil: 'networkidle2' }
     );
     await new Promise(r => setTimeout(r, 3000));
+    const debugInfoLiv = await page.evaluate(() => ({
+      title: document.title,
+      snippet: document.body?.innerText?.slice(0, 300),
+    }));
+    console.log('Liverpool DEBUG:', JSON.stringify(debugInfoLiv));
     const url = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[];
       const product = links.find(l => 
