@@ -1,98 +1,93 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# PriceHunter — Comparador de precios (backend)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API en NestJS que compara y rastrea precios de productos en Amazon, Mercado Libre y Liverpool mediante scraping con Puppeteer, desplegada en infraestructura serverless de Google Cloud.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Arquitectura
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```mermaid
+flowchart LR
+    GH[GitHub] --> GA[GitHub Actions<br/>CI/CD]
+    GA --> AR[Artifact Registry<br/>imágenes Docker]
+    AR --> API[Cloud Run — API<br/>servicio siempre activo]
+    AR --> JOB[Cloud Run Job<br/>scraper]
+    SCH[Cloud Scheduler] -.dispara a diario.-> JOB
+    SM[Secret Manager] -.credenciales.-> API
+    SM -.credenciales.-> JOB
+    API --> DB[(Supabase Postgres)]
+    JOB --> DB
 ```
 
-## Compile and run the project
+**Por qué esta arquitectura y no un solo servidor "todo en uno":**
+
+El proyecto empezó como un monolito NestJS con un `@Cron` interno que disparaba el scraping a medianoche. Esto funciona en un servidor tradicional (Railway, una VM), pero **no es confiable en un entorno serverless** como Cloud Run: el servicio escala a cero cuando no hay tráfico HTTP, así que un cron interno podría simplemente no ejecutarse nunca.
+
+La solución fue separar responsabilidades:
+- **Cloud Run (servicio)** — solo atiende requests HTTP de la API. Escala a cero cuando nadie lo usa, lo cual es ideal para costos.
+- **Cloud Run Job** — un proceso de un solo uso que corre el scraping y termina. No depende de que el servicio esté "despierto".
+- **Cloud Scheduler** — dispara el Job en un horario fijo, de forma completamente independiente del tráfico de la API.
+
+Ambos (servicio y Job) comparten la misma imagen Docker; el comportamiento se decide en runtime con la variable de entorno `MODE` (ver `entrypoint.sh`).
+
+## Decisiones técnicas y problemas resueltos
+
+Esta sección documenta los problemas reales que surgieron al mover un proyecto local a producción cloud — y cómo se resolvieron.
+
+| Problema | Causa | Solución |
+|---|---|---|
+| El cron interno no corría en Cloud Run | El servicio escala a cero sin tráfico | Se movió el scraping a un Cloud Run Job disparado por Cloud Scheduler |
+| `Error: The server does not support SSL connections` en local | La conexión forzaba SSL basándose solo en si existía `DATABASE_URL`, sin distinguir entorno | Se separó el control de SSL a su propia variable (`DB_SSL`), independiente de si hay `DATABASE_URL` |
+| Timeouts de navegación con Puppeteer en la nube | Los sitios objetivo responden más lento (o detectan distinto) a tráfico desde IPs de datacenter que desde una IP residencial | Se subió el timeout del Cloud Run Job de 600s a 1800s, y se subió la memoria asignada a 1Gi |
+| Credenciales expuestas en texto plano en variables de entorno | Configuración inicial simple para validar el deploy | Se migraron `DATABASE_URL` y `CRON_SECRET` a Secret Manager, con acceso restringido por IAM a la cuenta de servicio del proyecto |
+| Migración de datos entre proveedores (Railway → Supabase) | Railway retiró su tier gratuito de Postgres | Migración con `pg_dump`/`pg_restore` vía Docker, usando el modo *pooler* de Supabase (IPv4) en vez de la conexión directa (IPv6) para compatibilidad de red |
+
+## Stack técnico
+
+- **Backend:** NestJS, TypeScript, TypeORM
+- **Scraping:** Puppeteer + Chromium (contenedor Docker con dependencias del sistema instaladas)
+- **Base de datos:** PostgreSQL en Supabase (con connection pooling vía Supavisor)
+- **Infraestructura:** Google Cloud Run (servicio + Job), Cloud Scheduler, Artifact Registry, Secret Manager
+- **CI/CD:** GitHub Actions — build, push y deploy automático en cada push a `main`
+
+## Correr el proyecto en local
+
+Requiere Docker y Docker Compose.
 
 ```bash
-# development
-$ npm run start
+# Levantar la API + Postgres local
+docker compose up --build
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Simular el Job de scraping (corre una vez y termina)
+docker compose --profile job run --rm job
 ```
 
-## Run tests
+La API queda disponible en `http://localhost:3000`.
 
-```bash
-# unit tests
-$ npm run test
+## Variables de entorno
 
-# e2e tests
-$ npm run test:e2e
+| Variable | Descripción |
+|---|---|
+| `DATABASE_URL` | Connection string de Postgres |
+| `DB_SSL` | `"true"` en la nube, `"false"` en local |
+| `CRON_SECRET` | Protege el endpoint de scraping manual contra llamadas no autorizadas |
+| `MODE` | `"job"` para correr el scraper una vez y salir; sin definir, corre el servidor API |
 
-# test coverage
-$ npm run test:cov
-```
+## Endpoints principales
 
-## Deployment
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/scrape` | Compara precios de un producto dado un set de URLs |
+| `POST` | `/scrape/search` | Busca un producto por nombre en las 3 tiendas |
+| `GET` | `/scrape/history` | Historial completo de precios rastreados |
+| `GET` | `/scrape/history/:id` | Historial de un producto específico |
+| `GET` | `/scrape/price-drops` | Productos con caída reciente de precio |
+| `POST` | `/scrape/update-all` | Dispara la actualización completa (protegido con `x-cron-secret`) |
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## CI/CD
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Cada push a `main` que modifique `backend/` dispara `.github/workflows/deploy.yml`, que:
+1. Construye la imagen Docker
+2. La sube a Artifact Registry
+3. Actualiza el servicio de Cloud Run
+4. Actualiza el Cloud Run Job con la misma imagen
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Un segundo workflow, `.github/workflows/scheduled-scrape.yml`, corre independientemente todos los días para disparar la actualización de precios.
