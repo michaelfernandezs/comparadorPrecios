@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../environments/environment';
 
-const API = 'https://pricehunter-api-726516153570.us-central1.run.app/scrape';
+const API = environment.apiUrl;
 
 export interface ProductResult {
   title: string;
