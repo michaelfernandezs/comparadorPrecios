@@ -1,0 +1,54 @@
+# Levanta el proyecto completo (DB + backend + frontend) con un solo comando:
+#
+#   docker compose up --build
+#
+# Luego abre http://localhost:4200
+#
+# No se necesita ninguna cuenta externa (Supabase, GCP, etc.) — usa una
+# base de datos Postgres local dentro de un contenedor.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: price_comparator
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/price_comparator
+      DB_SSL: "false"
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      # Se declara aquí solo como referencia; la URL real que usa el
+      # frontend viene de src/environments/environment.ts (build-time).
+      API_URL_INFO: "El frontend usa http://localhost:3000 (ver src/environments/environment.ts)"
+    ports:
+      - "4200:4200"
+
+volumes:
+  pgdata:
